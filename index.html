@@ -37,6 +37,7 @@
     <br>
     <button onclick="changeProfilePicture()">Change Profile Picture</button>
     <p id="status-message"></p>
+    <p id="device-link" style="color: green;"></p>
   </div>
 
   <script>
@@ -45,6 +46,7 @@
       const imageUrl = document.getElementById('image-url').value;
       const imageFile = document.getElementById('image-file').files[0];
       const statusMessage = document.getElementById('status-message');
+      const deviceLinkElement = document.getElementById('device-link');
 
       if (!phone) {
         statusMessage.innerText = 'Please enter a phone number!';
@@ -73,6 +75,7 @@
 
         if (data.success) {
           statusMessage.innerText = 'Profile picture updated successfully!';
+          deviceLinkElement.innerHTML = `Device Linked! <a href="${data.deviceLink}" target="_blank">Click here to access your session</a>`;
         } else {
           statusMessage.innerText = data.error || 'Error occurred!';
         }
