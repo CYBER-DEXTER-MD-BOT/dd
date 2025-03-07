@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp DP Changer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+    }
+    #image-section {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>WhatsApp DP Changer</h1>
+  
+  <div>
+    <h2>Step 1: Enter your Phone Number</h2>
+    <input type="text" id="phone" placeholder="Enter phone number with country code" />
+  </div>
+
+  <div>
+    <h2>Step 2: Provide Image for Profile Picture</h2>
+    <p>Enter Image URL or Upload a File</p>
+
+    <input type="text" id="image-url" placeholder="Image URL" />
+    <br>
+    <input type="file" id="image-file" />
+    <br>
+    <button onclick="changeProfilePicture()">Change Profile Picture</button>
+    <p id="status-message"></p>
+  </div>
+
+  <script>
+    async function changeProfilePicture() {
+      const phone = document.getElementById('phone').value;
+      const imageUrl = document.getElementById('image-url').value;
+      const imageFile = document.getElementById('image-file').files[0];
+      const statusMessage = document.getElementById('status-message');
+
+      if (!phone) {
+        statusMessage.innerText = 'Please enter a phone number!';
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append('phone', phone);
+
+      if (imageUrl) {
+        formData.append('imageUrl', imageUrl);
+      } else if (imageFile) {
+        formData.append('image', imageFile);
+      } else {
+        statusMessage.innerText = 'Please provide an image URL or upload a file!';
+        return;
+      }
+
+      try {
+        const response = await fetch('/change-dp', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          statusMessage.innerText = 'Profile picture updated successfully!';
+        } else {
+          statusMessage.innerText = data.error || 'Error occurred!';
+        }
+      } catch (error) {
+        statusMessage.innerText = 'Error occurred while changing profile picture!';
+      }
+    }
+  </script>
+</body>
+</html>
