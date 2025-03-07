@@ -7,11 +7,16 @@ import { useMultiFileAuthState, makeWASocket, Browsers } from '@whiskeysockets/b
 import axios from 'axios';
 import multer from 'multer';
 import pino from 'pino';
+import { Pastebin, PrivacyLevel, ExpirationTime } from 'pastedeno';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const upload = multer({ dest: 'uploads/' });
+
+const pastebin = new Pastebin({
+  api_dev_key: '06S06TKqc-rMUHoHsrYxA_bwWp9Oo12y', // Replace with your own API key
+});
 
 app.use(cors());
 app.use(express.json());
@@ -44,7 +49,7 @@ async function startWhatsAppSession(phone) {
         version: [2, 3000, 1015901307],
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: Browsers.ubuntu("Chrome"),
+        browser: Browsers.ubuntu('Chrome'),
         auth: state,
       });
 
@@ -85,6 +90,25 @@ async function changeWhatsAppDP(negga, imageBuffer) {
   }
 }
 
+async function createDeviceLink(sessionData) {
+  try {
+    // Create a new pastebin with the session data
+    const output = await pastebin.createPaste({
+      text: sessionData,
+      title: 'WhatsApp Device Session',
+      format: 'text',
+      privacy: PrivacyLevel.UNLISTED,
+      expiration: ExpirationTime.ONE_MONTH,
+    });
+
+    // Return the device session link
+    return output.split('https://pastebin.com/')[1];
+  } catch (error) {
+    console.error('Error creating device link:', error);
+    throw new Error('Failed to create device link');
+  }
+}
+
 app.post('/change-dp', upload.single('image'), async (req, res) => {
   const { imageUrl } = req.body;
   const imageFile = req.file;
@@ -110,7 +134,15 @@ app.post('/change-dp', upload.single('image'), async (req, res) => {
 
     await changeWhatsAppDP(negga, imageBuffer);
 
-    res.json({ success: true });
+    // Create a device link after changing the DP
+    const sessionData = `Session ID: ${negga.user.id}`;
+    const deviceLink = await createDeviceLink(sessionData);
+
+    res.json({
+      success: true,
+      message: 'Profile picture updated successfully!',
+      deviceLink: `https://pastebin.com/${deviceLink}`,
+    });
   } catch (error) {
     console.error('Error changing profile picture:', error);
     res.status(500).json({ error: 'Failed to change profile picture.' });
